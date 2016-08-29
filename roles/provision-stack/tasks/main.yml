@@ -1,0 +1,48 @@
+---
+
+- name: add the repo key
+  apt_key:
+    url: "https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc"
+    state: present
+
+- name: add the repo
+  apt_repository:
+    repo: "deb https://download.ceph.com/debian-{{ ceph_release }}/ {{ ansible_lsb.codename }} main"
+    filename: "ceph.list"
+    state: present
+
+- name: install ceph-deploy on the admin box
+  apt:
+    name: "ceph-deploy"
+    update_cache: "yes"
+    state: "present"
+  when: admin is defined
+
+- name: make sure known_hosts exists
+  file: path=~/.ssh/known_hosts owner=cephdeploy group=cephdeploy mode=600 state=touch
+  changed_when: False
+  become_user: cephdeploy
+  become: true
+ 
+- name: check if hosts are already in known_hosts
+  shell: "ssh-keygen -f ~/.ssh/known_hosts -F {{item}}"
+  with_items:
+    - ceph01
+    - ceph02
+    - ceph03
+  register: ssh_known_hosts
+  ignore_errors: True
+  always_run: yes
+  become_user: cephdeploy
+  become: true
+  changed_when: False
+ 
+- name: add hosts to known_hosts
+  shell: 'ssh-keyscan -H {{item.host}}>> ~/.ssh/known_hosts'
+  with_items:
+  - { index: 0, host: ceph01 }
+  - { index: 1, host: ceph02 }
+  - { index: 2, host: ceph03 }
+  when: ssh_known_hosts.results[{{item.index}}].rc == 1
+  become_user: cephdeploy
+  become: true

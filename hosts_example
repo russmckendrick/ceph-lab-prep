@@ -1,0 +1,16 @@
+ceph01 ansible_host=1.2.3.4 ansible_port=22 hostname=ceph01 admin=true
+ceph02 ansible_host=2.2.3.4 ansible_port=22 hostname=ceph02
+ceph03 ansible_host=3.2.3.4 ansible_port=22 hostname=ceph03
+
+# Register all of the host groups we will be creating in the playbooks
+[ceph]
+ceph01
+ceph02
+ceph03
+
+# Finally, configure some bits to allow us access to the instances before we deploy our credentials using Ansible
+[ceph:vars]
+ansible_connection=ssh
+ansible_user=root
+ansible_private_key_file=~/.ssh/id_rsa
+host_key_checking=False

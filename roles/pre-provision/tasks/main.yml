@@ -1,0 +1,22 @@
+---
+
+- name: set the hostname
+  hostname:
+    name: "{{ hostname }}"
+
+- name: "build hosts file"
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_eth1.ipv4.address }} {{ hostvars[item].ansible_hostname }}" state=present
+  when: "hostvars[item].ansible_eth1.ipv4.address is defined"
+  with_items: "{{groups['all']}}"
+
+- name: install the packages
+  apt: name={{ item }} state=latest
+  with_items:
+    - git
+    - ntp
+
+- name: start ntp
+  service:
+    name: "ntp"
+    state: "started"
+    enabled: "yes"

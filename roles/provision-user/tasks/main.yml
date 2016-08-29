@@ -1,0 +1,39 @@
+---
+
+- name: create ceph group
+  group:
+    name: "cephdeploy"
+
+- name: Make sure we have a 'wheel' group
+  group:
+    name: wheel
+    state: present
+
+- name: Allow 'wheel' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+
+- name: create ceph user
+  user:
+    name: "cephdeploy"
+    groups: "cephdeploy,wheel"
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: ".ssh/id_rsa"
+
+- name: fetch all public ssh keys
+  shell: "cat /home/cephdeploy/.ssh/id_rsa.pub"
+  register: ssh_keys
+
+- name: check keys
+  debug: msg="{{ ssh_keys.stdout }}"
+
+- name: deploy keys on all servers
+  authorized_key: user=cephdeploy key="{{ item[0] }}"
+  delegate_to: "{{ item[1] }}"
+  with_nested:
+    - ssh_keys.stdout
+    - "{{groups['all']}}"
