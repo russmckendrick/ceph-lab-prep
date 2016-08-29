@@ -29,3 +29,5 @@ Please note, this playbook does not install or configure Ceph, it only ...
 - Exchanges keys between all hosts
 - Adds the Ceph repo on all hosts
 - Installs `ceph-deploy` on one of the hosts
+
+[![asciicast](https://asciinema.org/a/84177.png)](https://asciinema.org/a/84177)
